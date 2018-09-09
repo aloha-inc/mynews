@@ -46,6 +46,9 @@
 
                         <!-- Right Side Of Navbar -->
                         <ul class="navbar-nav ml-auto">
+
+
+                            
                       
                         {{-- 以下を追記 --}}
                         <!-- Authentication Links -->
