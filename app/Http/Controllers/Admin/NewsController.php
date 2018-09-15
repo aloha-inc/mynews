@@ -2,9 +2,14 @@
 namespace App\Http\Controllers\Admin;
 use Illuminate\Http\Request;
 use App\Http\Controllers\Controller;
+use Log;
 
 // 以下を追記することでNews Modelが扱えるようになる
 use App\News;
+// 以下を追記
+use App\History;
+
+use Carbon\Carbon;
 
 class NewsController extends Controller
 {
@@ -64,33 +69,36 @@ class NewsController extends Controller
       // News Modelからデータを取得する
       $news = News::find($request->id);
 
-      return view('admin.edit', ['news_form' => $news]);
+      return view('admin.news.edit', ['news_form' => $news]);
   }
 
 
-  public function update(Request $request)
-  {
-      // Validationをかける
-      $this->validate($request, News::$rules);
-      // News Modelからデータを取得する
-      $news = News::find($request->id);
-      // 送信されてきたフォームデータを格納する
-      $news_form = $request->all();
-      unset($news_form['_token']);
+public function update(Request $request)
+    {
+        Log::debug($request);
+        $this->validate($request, News::$rules);
+        $news = News::find($request->id);
+        $news_form = $request->all();
+        if ($request->remove == 'true') {
+            $news_form['image_path'] = null;
+        } elseif ($request->file('image')) {
+            $path = $request->file('image')->store('public/image');
+            $news_form['image_path'] = basename($path);
+        } else {
+            $news_form['image_path'] = $news->image_path;
+        }
 
-      // 該当するデータを上書きして保存する
-      $news->fill($news_form)->save();
+        unset($news_form['_token']);
+        unset($news_form['image']);
+        unset($news_form['remove']);
+        $news->fill($news_form)->save();
 
-      return redirect('admin/news');
-  }
+        // 以下を追記
+        $history = new History;
+        $history->news_id = $news->id;
+        $history->edited_at = Carbon::now();
+        $history->save();
 
-  // 以下を追記
-  public function delete(Request $request)
-  {
-      // 該当するNews Modelを取得
-      $news = News::find($request->id);
-      // 削除する
-      $news->delete();
-      return redirect('admin/news/');
-  }  
+        return redirect('admin/news/');
+    }  
 }

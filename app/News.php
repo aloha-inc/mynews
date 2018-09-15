@@ -8,9 +8,15 @@ class News extends Model
 {
     protected $guarded = array('id');
 
-    // 以下を追記
-    public static $rules = array(
+     public static $rules = array(
         'title' => 'required',
         'body' => 'required',
     );
+
+    // 以下を追記
+    public function histories()
+    {
+      return $this->hasMany('App\History');
+
+    }    
 }
